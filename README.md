@@ -1,104 +1,122 @@
 # Car Assistant - Torque Pro Telemetry Gateway
 
-**Car Assistant Gateway** to produkcyjny mikroserwis w języku Python (oparty o FastAPI), który służy jako pomost między aplikacją mobilną **Torque Pro** (odczytującą dane z OBD-II np. przez vLinker) a ekosystemem **Home Assistant** oraz dedykowanym dashboardem WWW.
+**Car Assistant Gateway** is a production-ready Python microservice (built with FastAPI) designed to bridge the **Torque Pro** mobile app (reading OBD-II telemetry via adapters like vLinker) with the **Home Assistant** ecosystem and a dedicated web dashboard.
 
-Projekt pozwala na odbieranie telemetrii pojazdu na żywo, rozsyłanie jej bez opóźnień za pośrednictwem WebSockets do nowoczesnego interfejsu przeglądarkowego w ciemnym motywie (Dark Mode) oraz automatyczne dodawanie i aktualizowanie encji samochodu w systemie Smart Home poprzez protokół **MQTT Auto-Discovery**.
-
----
-
-## 🚀 Główne możliwości i funkcje
-
-- 📡 **Endpoint dla Torque Pro**: Bezpośredni odbiór i mapowanie logów webowych wysyłanych z aplikacji Torque (w tym zgodność z wymaganym protokołem, zwracanie czystego tekstu `OK!`).
-- ⚡ **WebSockets na Żywo**: Odświeżanie danych na lokalnym dashboardzie WWW ułamki sekund po ich zrzuceniu z OBD-II bez przeładowania strony.
-- 🏠 **Home Assistant MQTT Discovery**: Gotowa konfiguracja MQTT. Serwer po uruchomieniu samodzielnie zgłasza urządzenie w Home Assistant ("Samochód (Torque Pro)") dodając encje takie jak Prędkość, Obroty, Poziom paliwa, Napięcie akumulatora i status Zapłonu.
-- 🎨 **Dashboard Premium**: Interfejs w stylistyce dark-mode z płynnymi zegarami CSS (conic-gradient), przypominający cyfrowe zegary w nowoczesnych autach.
-- 🐳 **Docker-Ready**: Pełna gotowość do natychmiastowego wdrażania na maszynach Proxmox, serwerach VPS czy Raspberry Pi.
+The project ingests real-time vehicle telemetry, streams it without latency via WebSockets to a modern dark-mode browser interface, and automatically registers and updates vehicle entities in your Smart Home setup using **MQTT Auto-Discovery**.
 
 ---
 
-## 🏗️ Architektura / Technologie
+## 🚀 Key Features
 
-- **Backend:** Python 3.11, FastAPI, Uvicorn
-- **Protokół IoT:** Eclipse Mosquitto, Paho-MQTT
-- **Frontend:** HTML5, Vanilla JavaScript, CSS3 (Brak zewnętrznych zależności graficznych typu React/Vue)
-- **Konteneryzacja:** Docker & Docker Compose
-- **Proxy:** Przykładowa konfiguracja dla Nginx (Reverse Proxy + obsługa szyfrowania SSL)
+* 📡 **Torque Pro Web Endpoint**: Seamlessly receives and maps web log uploads sent from the Torque app (fully compliant with the protocol specifications, returning plain-text `OK!`).
+* ⚡ **Real-Time WebSockets**: Instant data streaming to the local web dashboard within milliseconds of OBD-II capture—zero page refreshes required.
+* 🏠 **Home Assistant MQTT Discovery**: Out-of-the-box MQTT integration. Upon startup, the service self-registers the device in Home Assistant (*"Car (Torque Pro)"*) and creates entities such as Speed, RPM, Fuel Level, Battery Voltage, and Ignition status.
+* 🎨 **Premium Dark Dashboard**: Sleek, automotive-inspired dark-mode UI with smooth CSS gauges (`conic-gradient`) mimicking digital instrument clusters in modern cars.
+* 🐳 **Docker-Ready**: Fully containerized for instant deployment on Proxmox LXC/VMs, VPS servers, or Raspberry Pi.
 
 ---
 
-## 📦 Struktura Projektu
+## 🏗️ Architecture & Tech Stack
+
+* **Backend:** Python 3.11, FastAPI, Uvicorn
+* **IoT Protocol:** Eclipse Mosquitto, Paho-MQTT
+* **Frontend:** HTML5, Vanilla JavaScript, CSS3 (zero external heavy UI dependencies like React or Vue)
+* **Containerization:** Docker & Docker Compose
+* **Reverse Proxy:** Pre-configured Nginx template (Reverse Proxy + SSL/TLS support)
+
+---
+
+## 📦 Project Structure
 
 ```text
 ├── app/
-│   ├── main.py              # Główna logika FastAPI, MQTT i WebSockets
+│   ├── main.py              # Main FastAPI, MQTT, and WebSocket logic
 │   └── templates/
-│       └── index.html       # Dashboard w ciemnym motywie (Jinja2)
-├── docker-compose.yml       # Konfiguracja środowiska (Aplikacja + opcjonalny broker MQTT)
-├── Dockerfile               # Obraz Docker dla aplikacji
-├── nginx_car.conf           # Przykładowa konfiguracja vhosta (Nginx)
-├── requirements.txt         # Zależności Python
-├── test_emulator.py         # Skrypt symulujący ruch auta do celów testowych
-└── README.md                # Ten plik
+│       └── index.html       # Dark-mode dashboard (Jinja2)
+├── docker-compose.yml       # Environment setup (App + optional Mosquitto MQTT broker)
+├── Dockerfile               # Docker image definition
+├── nginx_car.conf           # Sample Nginx virtual host configuration
+├── requirements.txt         # Python dependencies
+├── test_emulator.py         # Car driving telemetry simulator for local testing
+└── README.md                # Documentation
+
 ```
 
 ---
 
-## ⚙️ Wdrażanie i Konfiguracja (Proxmox / Linux)
+## ⚙️ Deployment & Configuration (Proxmox / Linux)
 
-Uruchomienie projektu ogranicza się do zaledwie kilku komend. 
+Getting the service up and running takes just a few commands.
 
-### Wymagania:
-- Środowisko obsługujące kontenery: zainstalowany **Docker** oraz **Docker Compose**.
-- (Opcjonalnie) Skonfigurowany własny broker MQTT, chociaż `docker-compose.yml` zawiera serwer `mosquitto` gotowy do użycia.
+### Prerequisites:
 
-### Krok 1: Sklonuj repozytorium
+* A container runtime environment: **Docker** and **Docker Compose** installed.
+* *(Optional)* An existing MQTT broker (though a ready-to-use `mosquitto` container is included in `docker-compose.yml`).
+
+### Step 1: Clone the repository
+
 ```bash
-git clone https://github.com/TwojaNazwa/car-assistant.git
+git clone https://github.com/YourUsername/car-assistant.git
 cd car-assistant
+
 ```
 
-### Krok 2: Uruchom środowisko Docker
+### Step 2: Launch with Docker Compose
+
 ```bash
 docker compose up -d --build
-```
-Aplikacja zostanie zbudowana i uruchomiona na porcie `8000`.
 
-### Krok 3: (Konfiguracja Torque Pro na urządzeniu w aucie)
-W aplikacji Torque Pro wejdź w:
-`Ustawienia -> Wgrywanie danych na serwer WWW` 
-- Wpisz adres URL endpointu: `https://twojadomena.pl/api/torque` (jeśli używasz Reverse Proxy) lub IP serwera (jeśli w LAN).
-- Zaznacz odpowiednie interwały wysyłania (np. co 1 sekundę).
+```
+
+The application will build and start listening on port `8000`.
+
+### Step 3: Configure Torque Pro on your mobile device
+
+In the Torque Pro application, navigate to:
+`Settings -> Data Logging & Upload -> Webserver Settings`
+
+* Enter the endpoint URL: `[https://your-domain.com/api/torque](https://your-domain.com/api/torque)` (if using a Reverse Proxy) or your local server IP (if on LAN).
+* Set your preferred upload interval (e.g., every 1 second).
 
 ---
 
-## 🧪 Testowanie za pomocą Emulatora
-Nie musisz siedzieć w samochodzie, żeby przetestować dashboard! 
-Aplikacja zawiera symulator generujący płynne krzywe jazdy (zmiana biegów, przyspieszanie, nagrzewanie płynu, itp.).
+## 🧪 Testing with the Emulator
 
-Aby uruchomić emulator (wymaga Pythona lokalnie):
+No need to sit in your car to test the dashboard!
+
+The repository includes a built-in driving simulator that generates smooth telemetry curves (gear shifting, acceleration, coolant warm-up, etc.).
+
+To launch the emulator (requires local Python environment):
+
 ```bash
 pip install requests
 python test_emulator.py --url http://localhost:8000/api/torque
+
 ```
-Natychmiast po jego uruchomieniu wejdź na adres `http://localhost:8000/` – dashboard ożyje i zegary zaczną reagować na symulowane dane.
+
+Once started, open `http://localhost:8000/` in your browser—the dashboard will immediately spring to life as gauges react to the simulated telemetry.
 
 ---
 
-## 🌐 Konfiguracja Nginx (Reverse Proxy)
-Zaleca się umieszczenie aplikacji za Nginx-em, zwłaszcza ze względów bezpieczeństwa (certyfikat SSL HTTPS), co jest wymagane przez wiele nowoczesnych urządzeń i przeglądarek do uruchamiania skryptów oraz geolokalizacji.
+## 🌐 Nginx Configuration (Reverse Proxy)
 
-Gotowa, przykładowa konfiguracja Nginx uwzględniająca przekazywanie pakietów nagłówków WebSockets znajduje się w pliku `nginx_car.conf`. Pamiętaj aby zmienić w niej adresy IP, docelowe porty, certyfikaty SSL i domenę (np. `car.nostressit.co.uk`).
+Running the application behind Nginx is recommended—particularly for SSL/HTTPS termination, which is required by many modern browsers and mobile devices for secure script execution and geolocation features.
 
----
-
-## 👨‍💻 Zmienne Środowiskowe (ENV)
-Kontroluj aplikację za pomocą pliku `docker-compose.yml`:
-- `MQTT_HOST`: Adres IP lub nazwa brokera (domyślnie 127.0.0.1 lub nazwa kontenera)
-- `MQTT_PORT`: Port brokera MQTT (1883)
-- `MQTT_USER` / `MQTT_PASSWORD`: Dane logowania do MQTT (zostaw puste, by ominąć autoryzację)
-- `TORQUE_USER_EMAIL`: E-mail uwierzytelniający z Torque (Opcjonalnie, pozostawienie wartości domyślnej weryfikuje nadchodzące żądania względem tej zmiennej)
+A sample Nginx configuration with proper WebSocket upgrade headers is provided in `nginx_car.conf`. Make sure to update IP addresses, target ports, SSL certificate paths, and your domain name (e.g., `car.example.com`).
 
 ---
 
-## ⚖️ Licencja
-Ten projekt jest wydany na licencji MIT. Możesz z niego swobodnie korzystać i go modyfikować.
+## 👨‍💻 Environment Variables (ENV)
+
+Customize the microservice behavior via `docker-compose.yml` or an `.env` file:
+
+* `MQTT_HOST`: Hostname or IP of the MQTT broker (defaults to `127.0.0.1` or service container name).
+* `MQTT_PORT`: MQTT broker port (`1883`).
+* `MQTT_USER` / `MQTT_PASSWORD`: MQTT authentication credentials (leave blank if authentication is disabled).
+* `TORQUE_USER_EMAIL`: Torque account email for payload verification *(optional; validates incoming request headers/payload against this value)*.
+
+---
+
+## ⚖️ License
+
+This project is licensed under the **MIT License**. You are free to use, modify, and distribute it as needed.
